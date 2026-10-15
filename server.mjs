@@ -4,10 +4,10 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { services } from './lib/core.mjs';
-import chatH from './api/chat.mjs';
-import ttsH from './api/tts.mjs';
-import unlocksH from './api/unlocks.mjs';
-import configH from './api/config.mjs';
+import chatH from './api/chat.js';
+import ttsH from './api/tts.js';
+import unlocksH from './api/unlocks.js';
+import configH from './api/config.js';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 5173);
