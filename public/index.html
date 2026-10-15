@@ -76,6 +76,9 @@ body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#1b2650 0%,var
 .msg{max-width:80%;padding:10px 14px;border-radius:16px}
 .msg.u{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
 .msg.b{align-self:flex-start;background:var(--card);border-bottom-left-radius:4px}
+.handoff{align-self:flex-start;background:#fff;color:#16181d;border-radius:16px;padding:14px 16px;max-width:80%}
+.handoff .hk{font-size:12px;color:#6b7280}.handoff .ht{font-weight:600;margin:2px 0}.handoff .hq{font-size:13px;color:#444;margin-bottom:10px}
+.handoff .hb{display:inline-block;background:#1f2a5c;color:#fff;border-radius:99px;padding:8px 14px;font-size:13px;font-weight:600;text-decoration:none}
 .msg.sys{align-self:center;color:var(--mute);font-size:12px;background:none}
 .inrow{display:flex;gap:8px}
 .inrow input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:12px;font:inherit}
@@ -133,6 +136,7 @@ a.reset{color:var(--mute);font-size:12px;cursor:pointer;text-decoration:underlin
           <div class="txr"><div class="n"><b>"Buy 300 USDT of ARB"</b><span>English, shows Tokenomist facts first</span></div></div>
           <div class="txr"><div class="n"><b>"Padalhan mo si Maria ng 50 USDT"</b><span>Filipino</span></div></div>
           <div class="txr"><div class="n"><b>"Sperr meine Karte"</b><span>German</span></div></div>
+          <div class="txr"><div class="n"><b>"จองไฟลต์ไปมะนิลาวันที่ 20"</b><span>Thai, hands off to U-topia Pay like u.bot</span></div></div>
         </div>
       </div>
     </div>
@@ -176,7 +180,7 @@ a.reset{color:var(--mute);font-size:12px;cursor:pointer;text-decoration:underlin
 const $ = id => document.getElementById(id);
 let messages = [], pending = null, pendingUnlock = null, services = {};
 const COLORS = ['#5b8cff','#ffb547','#3ecf8e','#c47bff'];
-const ICONS = {transfer:['#2b2d36','&#8644;'],music:['#e5484d','&#9835;'],in:['#4dabf7','P'],token:['#7048e8','&#9670;'],lock:['#495057','&#128274;'],bell:['#f08c00','&#9873;']};
+const ICONS = {transfer:['#2b2d36','&#8644;'],music:['#e5484d','&#9835;'],in:['#4dabf7','P'],token:['#7048e8','&#9670;'],lock:['#495057','&#128274;'],bell:['#f08c00','&#9873;'],pay:['#1f2a5c','U']};
 const usd = n => (n<0?'-':'') + '$' + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 
 // Demo account lives in the browser (U-topia has no public API)
@@ -217,6 +221,10 @@ function applyAction(a){
       if (!h) { h = { symbol: sym, slug: SYM2SLUG[sym] || sym.toLowerCase(), amount: 0, price: 1 }; state.holdings.push(h); }
       h.amount += usdt / (h.price || 1); state.cash.USDT -= usdt;
       state.activity.unshift({ t: Date.now(), text: `Bought ${sym}`, amount: -usdt, icon: 'token' }); break; }
+    case 'book': { const kind = ['flights','hotels','uber','groceries'].includes(p.kind) ? p.kind : 'flights';
+      const url = 'https://ubot-pay-v2.vercel.app?type=' + kind + '&q=' + encodeURIComponent(p.query || '');
+      state.activity.unshift({ t: Date.now(), text: 'Sent to U-topia Pay: ' + (p.query || kind), amount: 0, icon: 'pay' });
+      a.handoff = { kind, url, query: p.query || '' }; break; }
     case 'set_alert': state.alerts.push({ symbol: p.symbol, condition: p.condition }); state.activity.unshift({ t: Date.now(), text: `Alert: ${p.symbol} ${p.condition}`, amount: 0, icon: 'bell' }); break;
     default: throw new Error('unknown action ' + a.type);
   }
@@ -267,6 +275,14 @@ async function showUnlock(slug, data){
   return data;
 }
 
+const KIND_LABEL = {flights:'Flight', hotels:'Hotel', uber:'Ride', groceries:'Groceries'};
+function showHandoff(h){
+  const d = document.createElement('div'); d.className = 'handoff';
+  d.innerHTML = `<div class="hk">${KIND_LABEL[h.kind]} &middot; via u.bot handoff</div><div class="ht">Review &amp; pay in U-topia Pay</div><div class="hq"></div><a class="hb" target="_blank" rel="noopener noreferrer">Open in U-topia Pay</a>`;
+  d.querySelector('.hq').textContent = h.query; d.querySelector('.hb').href = h.url;
+  $('chat').appendChild(d); $('chat').scrollTop = 1e9;
+  window.open(h.url, '_blank', 'noopener');
+}
 async function speak(text, lang){
   try {
     const r = await fetch('/api/tts', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text, lang})});
@@ -299,6 +315,7 @@ $('mOk').onclick = async () => {
   let r = {};
   try { applyAction(pending); r.state = state; } catch (e) { r.error = e.message; }
   if (r.state) { render(r.state); add('sys', 'Done: ' + (pending.summary || pending.type)); messages.push({role:'user', content:'(I confirmed: ' + (pending.summary||pending.type) + ')'});
+    if (pending.handoff) showHandoff(pending.handoff);
     if (pending.type==='buy_token') tab('wallets'); else if (/card|transfer/.test(pending.type)) tab('card'); }
   else add('sys', 'Error: ' + r.error);
   pending = null;
