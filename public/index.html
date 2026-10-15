@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>U-Bot Voice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f1a;--panel:#121829;--card:#182036;--line:#26304a;--ink:#eef1f8;--mute:#8f9bb8;--accent:#5b8cff;--good:#3ecf8e;--warn:#ffb547;--bad:#ff6b6b;
+  --p-bg:#f4f5f7;--p-surface:#ffffff;--p-ink:#16181d;--p-mute:#8a8f9a;--p-line:#eceef2;--p-dark:#1d1f27;--p-navy:#1f2a5c;--p-red:#e5484d;--p-green:#2f9e6a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#1b2650 0%,var(--bg) 60%);color:var(--ink);font:15px/1.5 Inter,"IBM Plex Sans Thai",system-ui,sans-serif;min-height:100vh}
+.wrap{display:grid;grid-template-columns:390px 1fr;gap:36px;max-width:1240px;margin:0 auto;padding:28px 20px;align-items:start}
+@media(max-width:960px){.wrap{grid-template-columns:1fr}}
+
+/* ---------- phone (matches U-topia app look) ---------- */
+.phone{background:#0d0e12;border-radius:52px;padding:12px;box-shadow:0 30px 80px #000a,inset 0 0 0 2px #2a2c33;position:relative}
+.screen{background:var(--p-bg);color:var(--p-ink);border-radius:42px;height:800px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.status{display:flex;justify-content:space-between;align-items:center;padding:14px 28px 6px;font-weight:600;font-size:14px}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:32px;background:#000;border-radius:20px}
+.scroll{flex:1;overflow:auto;padding:8px 16px 170px}
+.vcard{background:var(--p-dark);color:#fff;border-radius:18px;padding:18px 18px 16px;height:190px;display:flex;flex-direction:column;justify-content:space-between;position:relative;transition:filter .3s}
+.vcard.frozen{filter:grayscale(1) brightness(.75)}
+.vcard .visa{align-self:flex-end;font:italic 800 26px/1 Inter,sans-serif;letter-spacing:.5px}
+.vcard .num{display:flex;justify-content:space-between;font-size:18px;letter-spacing:2px}
+.vcard .foot{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.logo{display:flex;align-items:center;gap:6px;font-weight:700}
+.logo i{width:18px;height:18px;border-radius:50%;background:#fff;color:var(--p-dark);font:700 11px/18px Inter;text-align:center;font-style:normal}
+.frozen-tag{position:absolute;top:16px;left:16px;background:#ffffff22;border:1px solid #ffffff44;border-radius:99px;padding:2px 10px;font-size:12px;display:none}
+.vcard.frozen .frozen-tag{display:block}
+.lbl{color:var(--p-mute);font-size:12px;margin-top:14px}
+.balance{font-size:24px;font-weight:600;display:flex;align-items:center;gap:8px}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.actions button{background:var(--p-surface);border:1px solid var(--p-line);border-radius:14px;padding:10px 0;font:500 13px Inter,sans-serif;color:var(--p-ink);cursor:pointer}
+.apple{margin-top:10px;width:100%;background:#3a3c44;color:#fff;border:0;border-radius:99px;padding:12px;font:600 14px Inter,sans-serif}
+.sect{font-weight:600;margin:18px 2px 8px}
+.tx{background:var(--p-surface);border-radius:16px;padding:4px 12px}
+.txr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--p-line)}
+.txr:last-child{border:0}
+.ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:14px;color:#fff;flex:none}
+.txr .n{flex:1;min-width:0}.txr .n b{display:block;font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txr .n span{font-size:12px;color:var(--p-mute)}
+.amt{font-size:14px;font-weight:500}.amt.neg{color:var(--p-red)}.amt.pos{color:var(--p-green)}
+.tok{display:flex;justify-content:space-between;align-items:center;background:var(--p-surface);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.tok b{font-weight:600}.tok span{color:var(--p-mute);font-size:12px}
+.tabbar{position:absolute;left:12px;right:12px;bottom:14px;background:var(--p-surface);border-radius:26px;display:flex;justify-content:space-around;align-items:center;padding:8px 6px;box-shadow:0 6px 20px #0001}
+.tab{display:flex;flex-direction:column;align-items:center;font-size:10px;color:var(--p-mute);cursor:pointer;gap:2px;width:56px}
+.tab svg{width:20px;height:20px}
+.tab.on{background:var(--p-navy);color:#fff;border-radius:22px;padding:8px 0;margin-top:-18px;box-shadow:0 8px 18px #1f2a5c55}
+.view{display:none}.view.on{display:block}
+
+/* U-Bot floating mic + sheet */
+.fab{position:absolute;right:20px;bottom:92px;width:58px;height:58px;border-radius:50%;border:0;background:linear-gradient(135deg,#3b5bdb,#7048e8);color:#fff;cursor:pointer;box-shadow:0 10px 26px #4c5fd566;display:grid;place-items:center}
+.fab svg{width:26px;height:26px}
+.fab.on{background:var(--p-red);animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 14px #e5484d22}}
+.bubble{position:absolute;left:16px;right:88px;bottom:96px;background:var(--p-surface);border-radius:16px 16px 4px 16px;padding:10px 12px;font-size:13px;box-shadow:0 8px 24px #0002;display:none}
+.bubble.show{display:block}
+.bubble .who{font-size:11px;color:var(--p-mute);margin-bottom:2px}
+.modal{position:absolute;inset:0;background:#0006;display:none;align-items:flex-end;z-index:5}
+.modal.show{display:flex}
+.sheet{background:var(--p-surface);width:100%;border-radius:26px 26px 0 0;padding:20px 18px 28px}
+.sheet .tiny{font-size:12px;color:var(--p-mute)}
+.sheet .t{font-weight:600;font-size:17px;margin:6px 0}
+.sheet .risk{background:#fff6e6;border:1px solid #ffd88a;border-radius:12px;padding:10px;font-size:13px;margin-top:8px;display:none}
+.sheet .btns{display:flex;gap:10px;margin-top:14px}
+.sheet button{flex:1;padding:13px;border-radius:14px;border:0;font:600 14px Inter,sans-serif;cursor:pointer}
+.ok{background:var(--p-navy);color:#fff}.no{background:#eef0f4;color:var(--p-ink)}
+
+/* ---------- stage (big screen) ---------- */
+.stage{display:flex;flex-direction:column;gap:16px}
+.stage h1{margin:0;font-size:30px}.stage p.sub{margin:0;color:var(--mute)}
+.pill{font-size:11px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.svc{display:flex;gap:8px;flex-wrap:wrap}.svc .on{border-color:var(--good);color:var(--good)}.svc .off{border-color:var(--warn);color:var(--warn)}
+.chat{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;min-height:280px;max-height:380px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:80%;padding:10px 14px;border-radius:16px}
+.msg.u{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg.b{align-self:flex-start;background:var(--card);border-bottom-left-radius:4px}
+.msg.sys{align-self:center;color:var(--mute);font-size:12px;background:none}
+.inrow{display:flex;gap:8px}
+.inrow input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:12px;font:inherit}
+.inrow select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:8px}
+.unlock{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;display:none}
+.unlock.show{display:block}
+.unlock .hd{display:flex;justify-content:space-between;align-items:center}
+.unlock .big{font-size:40px;font-weight:700;color:var(--warn)}
+.bar{height:10px;border-radius:6px;background:var(--card);overflow:hidden;display:flex;margin-top:8px}
+.bar span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:var(--mute)}
+.src,.tinyd{font-size:11px;color:var(--mute);margin-top:10px}
+a.reset{color:var(--mute);font-size:12px;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone"><div class="screen" id="screen">
+    <div class="island"></div>
+    <div class="status"><span id="clock">7:11</span><span>&#9679;&#9679;&#9679; 5G</span></div>
+
+    <div class="scroll">
+      <!-- Card view (default, mirrors the banner) -->
+      <div class="view on" id="v-card">
+        <div class="vcard" id="vcard">
+          <span class="frozen-tag">Frozen</span>
+          <div class="visa">VISA</div>
+          <div class="num"><span>&bull;&bull;&bull;&bull;</span><span>&bull;&bull;&bull;&bull;</span><span>&bull;&bull;&bull;&bull;</span><span id="c4">1112</span></div>
+          <div class="foot"><span class="logo"><i>U</i>u-topia</span><span id="holder">KEN TANAKA</span></div>
+        </div>
+        <div class="lbl">Card Balance</div>
+        <div class="balance"><span id="cbal">$0</span><span style="color:var(--p-mute);font-size:16px">&#9673;</span></div>
+        <div class="actions">
+          <button id="bTop">+ Top up</button><button id="bFreeze">&#128274; Freeze</button><button>&#128465; Remove</button>
+        </div>
+        <button class="apple">Add to Apple Wallet</button>
+        <div class="sect">Cards Transactions</div>
+        <div class="tx" id="tx"></div>
+      </div>
+      <!-- Wallets view -->
+      <div class="view" id="v-wallets">
+        <div class="lbl" style="margin-top:4px">Crypto wallet</div>
+        <div class="balance" id="wbal">0 USDT</div>
+        <div class="sect">Tokens</div>
+        <div id="hold"></div>
+        <div class="lbl">Tap a token to see its unlock schedule</div>
+      </div>
+      <!-- Home view -->
+      <div class="view" id="v-home">
+        <div class="lbl" style="margin-top:4px">Hi Ken</div>
+        <div class="balance">Ask U-Bot anything</div>
+        <div class="sect">Try saying</div>
+        <div class="tx">
+          <div class="txr"><div class="n"><b>"เหลือเงินในบัตรเท่าไหร่"</b><span>Thai</span></div></div>
+          <div class="txr"><div class="n"><b>"Buy 300 USDT of ARB"</b><span>English, shows Tokenomist facts first</span></div></div>
+          <div class="txr"><div class="n"><b>"Padalhan mo si Maria ng 50 USDT"</b><span>Filipino</span></div></div>
+          <div class="txr"><div class="n"><b>"Sperr meine Karte"</b><span>German</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bubble" id="bubble"><div class="who">U-Bot</div><div id="btext"></div></div>
+    <button class="fab" id="micBtn" title="Talk to U-Bot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+
+    <div class="tabbar">
+      <div class="tab" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7v9H3z"/></svg>Home</div>
+      <div class="tab" data-v="wallets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Wallets</div>
+      <div class="tab" data-v="pay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>Pay</div>
+      <div class="tab on" data-v="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Card</div>
+      <div class="tab" data-v="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 14.5-4 16 0"/></svg>Profile</div>
+    </div>
+
+    <div class="modal" id="modal"><div class="sheet">
+      <div class="tiny">U-Bot needs your confirmation. Nothing happens until you tap Confirm.</div>
+      <div class="t" id="mSum"></div>
+      <div class="risk" id="mRisk"></div>
+      <div class="btns"><button class="no" id="mNo">Cancel</button><button class="ok" id="mOk">Confirm</button></div>
+    </div></div>
+  </div></div>
+
+  <div class="stage">
+    <div><h1>U-Bot Voice</h1><p class="sub">Talk to your U-topia money in your own language. Token facts from Tokenomist before you buy.</p></div>
+    <div class="svc" id="svc"></div>
+    <div class="chat" id="chat"><div class="msg sys">Tap the mic on the phone, or type below</div></div>
+    <div class="inrow">
+      <input id="txt" placeholder="Type in any language and press Enter">
+      <select id="lang">
+        <option value="th-TH">ไทย</option><option value="en-US">English</option><option value="fil-PH">Filipino</option>
+        <option value="de-DE">Deutsch</option><option value="vi-VN">Tiếng Việt</option><option value="ja-JP">日本語</option>
+      </select>
+    </div>
+    <div class="unlock" id="unlock"></div>
+    <div class="tinyd">Concept feature for the U-topia app. Account data in this demo is simulated; voice and token data come from ElevenLabs and Tokenomist when keys are set.</div>
+    <a class="reset" id="reset">reset demo account</a>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let messages = [], pending = null, pendingUnlock = null, services = {};
+const COLORS = ['#5b8cff','#ffb547','#3ecf8e','#c47bff'];
+const ICONS = {transfer:['#2b2d36','&#8644;'],music:['#e5484d','&#9835;'],in:['#4dabf7','P'],token:['#7048e8','&#9670;'],lock:['#495057','&#128274;'],bell:['#f08c00','&#9873;']};
+const usd = n => (n<0?'-':'') + '$' + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+
+// Demo account lives in the browser (U-topia has no public API)
+const initialState = () => ({
+  user: { name: 'Ken', country: 'TH' },
+  cash: { USDT: 2450.0 },
+  holdings: [
+    { symbol: 'ARB', slug: 'arbitrum', amount: 1200, price: 0.42 },
+    { symbol: 'SUI', slug: 'sui', amount: 300, price: 2.1 },
+    { symbol: 'OP', slug: 'optimism', amount: 450, price: 0.71 },
+  ],
+  card: { last4: '1112', holder: 'KEN TANAKA', status: 'active', balanceUSD: 17388.0 },
+  contacts: [
+    { name: 'Mom', country: 'TH', address: '0x9aF3...12cD' },
+    { name: 'Maria', country: 'PH', address: '0x51bE...77aA' },
+    { name: 'Michael T.', country: 'US', address: '0x7Cc1...0b9E' },
+  ],
+  alerts: [],
+  activity: [
+    { t: Date.now() - 3600000, text: 'Transfer to Michael T.', amount: -50, icon: 'transfer' },
+    { t: Date.now() - 86400000, text: 'Apple Music', amount: -10.99, icon: 'music' },
+    { t: Date.now() - 90000000, text: 'PayPal Receive', amount: 334.76, icon: 'in' },
+    { t: Date.now() - 5 * 86400000, text: 'Revolut Transfer', amount: -100, icon: 'transfer' },
+  ],
+});
+const SYM2SLUG = { ARB: 'arbitrum', SUI: 'sui', OP: 'optimism', APT: 'aptos' };
+let state = initialState();
+function applyAction(a){
+  const p = a.params || {};
+  switch (a.type) {
+    case 'transfer': { const amt = Number(p.amount) || 0;
+      if (/USDT|USDC/i.test(p.currency || 'USDT')) state.cash.USDT -= amt; else state.card.balanceUSD -= amt;
+      state.activity.unshift({ t: Date.now(), text: `Transfer to ${p.to}`, amount: -amt, icon: 'transfer' }); break; }
+    case 'freeze_card': state.card.status = 'frozen'; state.activity.unshift({ t: Date.now(), text: 'Card frozen by U-Bot', amount: 0, icon: 'lock' }); break;
+    case 'unfreeze_card': state.card.status = 'active'; state.activity.unshift({ t: Date.now(), text: 'Card unfrozen by U-Bot', amount: 0, icon: 'lock' }); break;
+    case 'buy_token': { const sym = String(p.symbol || '').toUpperCase(); const usdt = Number(p.usdt) || 0;
+      let h = state.holdings.find(x => x.symbol === sym);
+      if (!h) { h = { symbol: sym, slug: SYM2SLUG[sym] || sym.toLowerCase(), amount: 0, price: 1 }; state.holdings.push(h); }
+      h.amount += usdt / (h.price || 1); state.cash.USDT -= usdt;
+      state.activity.unshift({ t: Date.now(), text: `Bought ${sym}`, amount: -usdt, icon: 'token' }); break; }
+    case 'set_alert': state.alerts.push({ symbol: p.symbol, condition: p.condition }); state.activity.unshift({ t: Date.now(), text: `Alert: ${p.symbol} ${p.condition}`, amount: 0, icon: 'bell' }); break;
+    default: throw new Error('unknown action ' + a.type);
+  }
+  state.cash.USDT = Math.round(state.cash.USDT * 100) / 100;
+}
+async function load(){ try { services = (await fetch('/api/config').then(r=>r.json())).services; } catch {} render(state); renderSvc(); }
+function renderSvc(){
+  const s = [['LLM', services.llm], ['ElevenLabs voice', services.voice], ['Tokenomist live', services.tokenomist]];
+  $('svc').innerHTML = s.map(([n,on]) => `<span class="pill ${on?'on':'off'}">${n}: ${on?'live':'fallback'}</span>`).join('');
+}
+function ago(t){ const d = new Date(t), now = new Date(); const time = d.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+  if (d.toDateString()===now.toDateString()) return 'Today &bull; ' + time;
+  if (now - d < 2*86400000) return 'Yesterday &bull; ' + time;
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'}) + ' &bull; ' + time; }
+function render(s){
+  $('cbal').textContent = usd(s.card.balanceUSD);
+  $('c4').textContent = s.card.last4; $('holder').textContent = s.card.holder;
+  $('vcard').classList.toggle('frozen', s.card.status === 'frozen');
+  $('bFreeze').innerHTML = s.card.status === 'frozen' ? '&#128275; Unfreeze' : '&#128274; Freeze';
+  $('tx').innerHTML = s.activity.slice(0,6).map(a => { const [bg,g] = ICONS[a.icon]||ICONS.transfer; const amt = a.amount||0;
+    return `<div class="txr"><div class="ic" style="background:${bg}">${g}</div><div class="n"><b>${a.text}</b><span>${ago(a.t)}</span></div>${amt?`<div class="amt ${amt<0?'neg':'pos'}">${amt>0?'+':''}${usd(amt)}</div>`:''}</div>`; }).join('');
+  $('wbal').textContent = s.cash.USDT.toLocaleString(undefined,{maximumFractionDigits:2}) + ' USDT';
+  $('hold').innerHTML = s.holdings.map(h => `<div class="tok" data-slug="${h.slug}"><div><b>${h.symbol}</b><br><span>${h.amount.toFixed(2)}</span></div><span>&asymp; ${(h.amount*h.price).toFixed(2)} USDT</span></div>`).join('');
+  document.querySelectorAll('#hold .tok').forEach(el => el.onclick = () => showUnlock(el.dataset.slug));
+}
+function tab(v){ document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.v===v));
+  document.querySelectorAll('.view').forEach(x => x.classList.toggle('on', x.id==='v-'+v)); }
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => { if ($('v-'+t.dataset.v)) tab(t.dataset.v); });
+$('bFreeze').onclick = () => send($('bFreeze').textContent.includes('Unfreeze') ? 'Unfreeze my card' : 'Freeze my card');
+$('bTop').onclick = () => send('How do I top up my card?');
+function add(cls, text){ const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text; $('chat').appendChild(d); $('chat').scrollTop = 1e9; }
+function bubble(text){ $('btext').textContent = text; $('bubble').classList.add('show'); clearTimeout(bubble.t); bubble.t = setTimeout(()=>$('bubble').classList.remove('show'), 9000); }
+
+async function showUnlock(slug, data){
+  data = data || await fetch('/api/unlocks?slug=' + encodeURIComponent(slug)).then(r=>r.json());
+  const box = $('unlock');
+  if (data.source === 'tokenomist') {
+    box.innerHTML = `<div class="hd"><b>${slug}</b><span class="pill on">Tokenomist live</span></div><pre class="src" style="white-space:pre-wrap;max-height:220px;overflow:auto">${JSON.stringify(data.raw,null,2).slice(0,3000)}</pre>`;
+  } else if (data.nextUnlock) {
+    const u = data.nextUnlock;
+    box.innerHTML = `<div class="hd"><b>${data.name} (${data.symbol})</b><span class="pill off">sample data</span></div>
+      <div class="src">Next unlock in ${u.inDays} days</div><div class="big">${u.amountPct}% <span class="src">of supply, ${u.valueToMarketCapPct}% of market cap</span></div>
+      <div class="bar">${u.groups.map((g,i)=>`<span style="width:${g.pct}%;background:${COLORS[i%4]}"></span>`).join('')}</div>
+      <div class="legend">${u.groups.map((g,i)=>`<span><b style="color:${COLORS[i%4]}">&#9632;</b> ${g.name} ${g.pct}%</span>`).join('')}</div>
+      <div class="src">Source: sample data until a Tokenomist API key is set. Facts only, not investment advice.</div>`;
+  } else { box.innerHTML = `<div class="src">No unlock data for ${slug}</div>`; }
+  box.classList.add('show');
+  return data;
+}
+
+async function speak(text, lang){
+  try {
+    const r = await fetch('/api/tts', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text, lang})});
+    if (r.status === 200) { const a = new Audio(URL.createObjectURL(await r.blob())); await a.play(); return; }
+  } catch {}
+  const u = new SpeechSynthesisUtterance(text); u.lang = lang || 'en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+async function send(text){
+  if (!text.trim()) return;
+  add('u', text); messages.push({role:'user', content:text}); $('txt').value = '';
+  bubble('...');
+  const r = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({messages, state})}).then(r=>r.json()).catch(e=>({reply:'Network error: '+e.message}));
+  add('b', r.reply); bubble(r.reply); messages.push({role:'assistant', content: r.reply});
+  const slug = r.unlock_slug || (r.unlocks && r.unlocks[0] && r.unlocks[0].slug);
+  pendingUnlock = null;
+  if (slug) pendingUnlock = await showUnlock(slug, (r.unlocks||[]).find(x=>x.slug===slug));
+  speak(r.reply, r.lang || $('lang').value);
+  if (r.action && r.action.type) {
+    pending = r.action; $('mSum').textContent = r.action.summary || r.action.type;
+    const u = pendingUnlock && pendingUnlock.nextUnlock;
+    $('mRisk').style.display = (r.action.type==='buy_token' && u) ? 'block' : 'none';
+    if (u) $('mRisk').textContent = `Heads up: ${pendingUnlock.symbol} unlocks ${u.amountPct}% of supply in ${u.inDays} days (${pendingUnlock.source==='tokenomist'?'Tokenomist':'sample data'}).`;
+    $('modal').classList.add('show');
+  }
+}
+
+$('mOk').onclick = async () => {
+  $('modal').classList.remove('show');
+  let r = {};
+  try { applyAction(pending); r.state = state; } catch (e) { r.error = e.message; }
+  if (r.state) { render(r.state); add('sys', 'Done: ' + (pending.summary || pending.type)); messages.push({role:'user', content:'(I confirmed: ' + (pending.summary||pending.type) + ')'});
+    if (pending.type==='buy_token') tab('wallets'); else if (/card|transfer/.test(pending.type)) tab('card'); }
+  else add('sys', 'Error: ' + r.error);
+  pending = null;
+};
+$('mNo').onclick = () => { $('modal').classList.remove('show'); add('sys', 'Cancelled'); messages.push({role:'user', content:'(I cancelled that action)'}); pending = null; };
+$('txt').onkeydown = e => { if (e.key === 'Enter') send($('txt').value); };
+$('reset').onclick = () => { state = initialState(); render(state); messages=[]; $('chat').innerHTML=''; $('unlock').classList.remove('show'); tab('card'); };
+
+// speech recognition (Chrome)
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition; let rec = null;
+$('micBtn').onclick = () => {
+  if (!SR) { add('sys', 'Voice input needs Chrome. Type instead.'); return; }
+  if (rec) { rec.stop(); return; }
+  rec = new SR(); rec.lang = $('lang').value; rec.interimResults = true;
+  $('micBtn').classList.add('on'); bubble('Listening...');
+  rec.onresult = e => { const t = [...e.results].map(x=>x[0].transcript).join(''); $('txt').value = t; bubble(t); };
+  rec.onend = () => { $('micBtn').classList.remove('on'); const t = $('txt').value; rec = null; if (t) send(t); };
+  rec.start();
+};
+setInterval(() => $('clock').textContent = new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}).replace(/\s?[AP]M/,''), 10000);
+load();
+</script>
+</body>
+</html>

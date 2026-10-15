@@ -1,0 +1,8 @@
+{
+  "name": "orangeegg-ubot-voice",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "node server.mjs" },
+  "engines": { "node": ">=20" }
+}
