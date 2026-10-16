@@ -40,4 +40,4 @@ http.createServer(async (req, res) => {
     if (e.code === 'ENOENT') { res.writeHead(404); return res.end('not found'); }
     console.error(e); res.writeHead(500); res.end(e.message);
   }
-}).listen(PORT, () => console.log(`U-Bot Voice on http://localhost:${PORT}`, services()));
+}).listen(PORT, () => console.log(`U-Bot Voice on http://localhost:${PORT}`));
