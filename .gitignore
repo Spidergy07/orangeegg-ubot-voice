@@ -6,3 +6,4 @@ server.log
 .tokenomist-oauth.json
 .tokenomist-authurl.txt
 .env.*.json
+oauth.log
