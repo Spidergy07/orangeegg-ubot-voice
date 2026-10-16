@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>U-Bot Voice</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,12 +11,13 @@
   --p-bg:#f4f5f7;--p-surface:#ffffff;--p-ink:#16181d;--p-mute:#8a8f9a;--p-line:#eceef2;--p-dark:#1d1f27;--p-navy:#1f2a5c;--p-red:#e5484d;--p-green:#2f9e6a}
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#1b2650 0%,var(--bg) 60%);color:var(--ink);font:15px/1.5 Inter,"IBM Plex Sans Thai",system-ui,sans-serif;min-height:100vh}
-.wrap{display:grid;grid-template-columns:390px 1fr;gap:36px;max-width:1240px;margin:0 auto;padding:28px 20px;align-items:start}
-@media(max-width:960px){.wrap{grid-template-columns:1fr}}
+.wrap{display:grid;grid-template-columns:auto 1fr;gap:36px;max-width:1280px;margin:0 auto;padding:16px 24px;align-items:center;min-height:100vh}
+@media(max-width:960px) and (min-width:761px){.wrap{grid-template-columns:1fr;justify-items:center}}
 
 /* ---------- phone (matches U-topia app look) ---------- */
 .phone{background:#0d0e12;border-radius:52px;padding:12px;box-shadow:0 30px 80px #000a,inset 0 0 0 2px #2a2c33;position:relative}
-.screen{background:var(--p-bg);color:var(--p-ink);border-radius:42px;height:800px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.screen{background:var(--p-bg);color:var(--p-ink);border-radius:42px;height:min(800px,calc(100vh - 56px));aspect-ratio:366/800;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.mbar{display:none}
 .status{display:flex;justify-content:space-between;align-items:center;padding:14px 28px 6px;font-weight:600;font-size:14px}
 .island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:32px;background:#000;border-radius:20px}
 .scroll{flex:1;overflow:auto;padding:8px 16px 170px}
@@ -92,6 +93,24 @@ body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#1b2650 0%,var
 .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:var(--mute)}
 .src,.tinyd{font-size:11px;color:var(--mute);margin-top:10px}
 a.reset{color:var(--mute);font-size:12px;cursor:pointer;text-decoration:underline}
+
+/* mobile: the app only, full screen */
+@media(max-width:760px){
+  body{background:var(--p-bg)}
+  .wrap{display:block;padding:0;min-height:0}
+  .stage{display:none}
+  .phone{padding:0;border-radius:0;box-shadow:none;background:none}
+  .screen{width:100vw;height:100dvh;aspect-ratio:auto;border-radius:0}
+  .island{display:none}
+  .status{padding-top:max(14px,env(safe-area-inset-top))}
+  .scroll{padding-bottom:240px}
+  .mbar{display:flex;gap:8px;position:absolute;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:3}
+  .mbar select{border:1px solid var(--p-line);border-radius:14px;background:#fff;padding:0 8px;font:500 14px Inter,sans-serif;color:var(--p-ink)}
+  .mbar input{flex:1;min-width:0;border:1px solid var(--p-line);border-radius:14px;padding:12px 14px;font:16px Inter,"IBM Plex Sans Thai",sans-serif;background:#fff;color:var(--p-ink)}
+  .tabbar{bottom:calc(14px + env(safe-area-inset-bottom))}
+  .fab{bottom:calc(146px + env(safe-area-inset-bottom));right:16px}
+  .bubble{bottom:calc(150px + env(safe-area-inset-bottom));right:86px}
+}
 </style>
 </head>
 <body>
@@ -144,6 +163,10 @@ a.reset{color:var(--mute);font-size:12px;cursor:pointer;text-decoration:underlin
     <div class="bubble" id="bubble"><div class="who">U-Bot</div><div id="btext"></div></div>
     <button class="fab" id="micBtn" title="Talk to U-Bot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
 
+    <div class="mbar">
+      <select id="mlang" aria-label="Mic language"><option value="th-TH">ไทย</option><option value="en-US">EN</option><option value="fil-PH">FIL</option><option value="de-DE">DE</option><option value="vi-VN">VI</option><option value="ja-JP">日本</option></select>
+      <input id="mtxt" placeholder="Type or tap the mic" aria-label="Message">
+    </div>
     <div class="tabbar">
       <div class="tab" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7v9H3z"/></svg>Home</div>
       <div class="tab" data-v="wallets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Wallets</div>
@@ -178,6 +201,8 @@ a.reset{color:var(--mute);font-size:12px;cursor:pointer;text-decoration:underlin
 </div>
 <script>
 const $ = id => document.getElementById(id);
+const isMobile = () => matchMedia('(max-width:760px)').matches;
+const curLang = () => isMobile() ? $('mlang').value : $('lang').value;
 let messages = [], pending = null, pendingUnlock = null, services = {};
 const COLORS = ['#5b8cff','#ffb547','#3ecf8e','#c47bff'];
 const ICONS = {transfer:['#2b2d36','&#8644;'],music:['#e5484d','&#9835;'],in:['#4dabf7','P'],token:['#7048e8','&#9670;'],lock:['#495057','&#128274;'],bell:['#f08c00','&#9873;'],pay:['#1f2a5c','U']};
@@ -300,7 +325,7 @@ async function send(text){
   const slug = r.unlock_slug || (r.unlocks && r.unlocks[0] && r.unlocks[0].slug);
   pendingUnlock = null;
   if (slug) pendingUnlock = await showUnlock(slug, (r.unlocks||[]).find(x=>x.slug===slug));
-  speak(r.reply, r.lang || $('lang').value);
+  speak(r.reply, r.lang || curLang());
   if (r.action && r.action.type) {
     pending = r.action; $('mSum').textContent = r.action.summary || r.action.type;
     const u = pendingUnlock && pendingUnlock.nextUnlock;
@@ -322,6 +347,7 @@ $('mOk').onclick = async () => {
 };
 $('mNo').onclick = () => { $('modal').classList.remove('show'); add('sys', 'Cancelled'); messages.push({role:'user', content:'(I cancelled that action)'}); pending = null; };
 $('txt').onkeydown = e => { if (e.key === 'Enter') send($('txt').value); };
+$('mtxt').onkeydown = e => { if (e.key === 'Enter') { const v = $('mtxt').value; $('mtxt').value = ''; send(v); } };
 $('reset').onclick = () => { state = initialState(); render(state); messages=[]; $('chat').innerHTML=''; $('unlock').classList.remove('show'); tab('card'); };
 
 // speech recognition (Chrome)
@@ -329,7 +355,7 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition; let rec =
 $('micBtn').onclick = () => {
   if (!SR) { add('sys', 'Voice input needs Chrome. Type instead.'); return; }
   if (rec) { rec.stop(); return; }
-  rec = new SR(); rec.lang = $('lang').value; rec.interimResults = true;
+  rec = new SR(); rec.lang = curLang(); rec.interimResults = true;
   $('micBtn').classList.add('on'); bubble('Listening...');
   rec.onresult = e => { const t = [...e.results].map(x=>x[0].transcript).join(''); $('txt').value = t; bubble(t); };
   rec.onend = () => { $('micBtn').classList.remove('on'); const t = $('txt').value; rec = null; if (t) send(t); };
