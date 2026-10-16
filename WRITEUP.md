@@ -27,11 +27,11 @@ Bookings go through the same U-topia Pay handoff that u.bot uses. When a member 
 4. "จองไฟลต์ไปมะนิลาวันที่ 20" (Thai, book a flight to Manila on the 20th): after Confirm, U-topia Pay opens.
 
 ## What is live and what is simulated
-Live: Claude understanding and structured actions, the confirm flow, six languages, the U-topia Pay handoff and the Vercel deployment.
+Live: Claude understanding and structured actions, ElevenLabs voice, the confirm flow, six languages, the U-topia Pay handoff and the Vercel deployment.
 
 Simulated: account data such as balances, the card and transactions, because the U-topia app has no public API yet. Each action maps to one app endpoint once it is connected.
 
-Waiting on keys: Tokenomist unlock data and ElevenLabs voice. The code for both is written. Until the keys are set, the demo shows labelled sample unlock data and uses the browser's speech.
+Waiting on access: Tokenomist unlock data. The integration is written and our key is set, but it is on the free plan and the API returns 403, so the demo shows labelled sample unlock data until the hackathon API grant is active.
 
 ## Trust rules
 The model returns an action object and the app runs it only after the tap. U-Bot never asks for passwords, seed phrases or card numbers. Token answers give numbers and their source.
